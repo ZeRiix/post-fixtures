@@ -1,0 +1,36 @@
+name: Tests
+
+on: [pull_request]
+
+jobs:  
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/download-artifact@v8
+        with:
+          name: build
+          path: .
+      - uses: actions/setup-node@v7
+        with:
+          cache: 'pnpm'
+          node-version: '24.18.0'
+      - run: pnpm ci
+      - run: pnpm test:types
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/download-artifact@v8
+        with:
+          name: build
+          path: .
+      - uses: actions/setup-node@v7
+        with:
+          cache: 'pnpm'
+          node-version: '24.18.0'
+      - run: pnpm ci
+      - run: pnpm test:lint

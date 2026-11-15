@@ -1,0 +1,27 @@
+{
+  "name": "posts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test:types": "./.commands/test-types.sh",
+    "test:lint": "./.commands/test-lint.sh",
+    "remove-modules": "rm -rf node_modules projects/*/node_modules",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@duplojs/agents-kit": "0.1.0-beta.11",
+    "@duplojs/code-config": "0.1.0-beta.11",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "typescript": "6.0.3",
+    "husky": "9.1.7",
+    "tscw-config": "1.1.2",
+    "tsx": "4.23.15"
+  },
+  "packageManager": "pnpm@12.3.4+sha512.961aa41fb077da3a04a441d9f8e15ebc0c96da8ef710b2eb67bf9ee7cb0610eabd48f1fd85f51cffe73846785fa0f87c56a3a872a1d893f8446741b5cce45457",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "onFail": "error"
+    }
+  }
+}

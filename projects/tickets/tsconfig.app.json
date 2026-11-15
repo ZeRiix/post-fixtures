@@ -1,0 +1,11 @@
+{
+  "extends": "@duplojs/code-config/tsconfig/base.json",
+  "compilerOptions": {
+	"types": ["./globals.d.ts"],
+    "paths": {
+      "@src": ["./src/index.ts"],
+      "@src/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

@@ -1,0 +1,8 @@
+node_modules
+dist
+cache
+.pnpm-store
+.DS_Store
+.temp
+*.generate.*
+*.generate

@@ -1,0 +1,4 @@
+{
+  "extends": "@duplojs/code-config/tsconfig/base.json",
+  "include": ["commitlint.config.ts", "oxlint.config.ts"],
+}

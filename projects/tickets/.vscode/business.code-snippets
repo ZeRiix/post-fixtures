@@ -1,0 +1,251 @@
+{
+	"DuploJS: Init entity": {
+		"prefix": "ief",
+		"scope": "typescript",
+		"description": "Entity namespace, NewType Id et shape métier",
+		"body": [
+			"import * as DDataStructure from \"@duplojs/lang/dataStructure\";",
+			"import * as DModeling from \"@duplojs/lang/modeling\";",
+			"",
+			"export namespace ${1:Name} {",
+			"\tconst namespace = DModeling.createEntityNamespace(\"${1:Name}\");",
+			"",
+			"\texport const Entity = namespace.createEntity(() => ({",
+			"\t}));",
+			"\texport type Entity = DDataStructure.StructureValue<typeof Entity>;",
+			"",
+			"}",
+			"$0"
+		]
+	},
+	"DuploJS: Entity NewType": {
+		"prefix": "cnt",
+		"scope": "typescript",
+		"description": "NewType dans un namespace créé avec createEntityNamespace",
+		"body": [
+			"export const ${1:Name} = namespace.createNewType(\"${1:Name}\", DDataStructure.${2:string}()${3:, []});",
+			"export type ${1:Name} = DDataStructure.StructureValue<typeof ${1:Name}>;",
+			"$0"
+		]
+	},
+	"DuploJS: Standalone NewType": {
+		"prefix": "cst",
+		"scope": "typescript",
+		"description": "NewType autonome sans entity namespace",
+		"body": [
+			"import * as DDataStructure from \"@duplojs/lang/dataStructure\";",
+			"import * as DModeling from \"@duplojs/lang/modeling\";",
+			"",
+			"export const ${1:Email} = DModeling.createNewType(\"${1:Email}\", DDataStructure.${2:string}()${3:, []});",
+			"export type ${1:Email} = DDataStructure.StructureValue<typeof ${1:Email}>;",
+			"$0"
+		]
+	},
+	"DuploJS: Tagged state": {
+		"prefix": "cts",
+		"scope": "typescript",
+		"description": "État discriminé créé avec createTaggedObject",
+		"body": [
+			"export const ${1:AvailableState} = DModeling.createTaggedObject(\"${1:AvailableState}\", {",
+			"\t$2",
+			"});",
+			"export type ${1:AvailableState} = DDataStructure.StructureValue<typeof ${1:AvailableState}>;",
+			"$0"
+		]
+	},
+	"DuploJS: Entity flag": {
+		"prefix": "cef",
+		"scope": "typescript",
+		"description": "Flag de qualification d’une entité, à placer dans son namespace",
+		"body": [
+			"export const ${1:AvailableFlag} = DModeling.createFlag<",
+			"\t\"${2:Available}\",",
+			"\t${3:AvailableState},",
+			"\ttypeof Entity",
+			">(\"${2:Available}\");",
+			"export type ${1:AvailableFlag} = DModeling.GetFlag<typeof ${1:AvailableFlag}>;",
+			"$0"
+		]
+	},
+	"DuploJS: Refine state": {
+		"prefix": "crs",
+		"scope": "typescript",
+		"description": "Qualification de l’état courant en result Either",
+		"body": [
+			"export function refineState<GenericEntity extends Entity>(entity: GenericEntity) {",
+			"\treturn DPattern.matchWithTaggedObject(entity.state, {",
+			"\t\t${1:AvailableState}: (state) => DEither.result(",
+			"\t\t\t\"${2:Available}\",",
+			"\t\t\t${3:AvailableFlag}.append(entity, state),",
+			"\t\t),",
+			"\t\t$0",
+			"\t});",
+			"}"
+		]
+	},
+	"DuploJS: Entity fact": {
+		"prefix": "cfa",
+		"scope": "typescript",
+		"description": "Fact: contrat de transition et run, basé sur les fixtures TDD",
+		"body": [
+			"import * as DModeling from \"@duplojs/lang/modeling\";",
+			"import * as DCommon from \"@duplojs/lang/common\";",
+			"import { ${1:Ticket} } from \"..\";",
+			"",
+			"export const ${2:SellTicketFact} = DModeling.createFact<",
+			"\t\"${3:SellTicket}\",",
+			"\t${4:Ticket.SoldState},",
+			"\ttypeof ${1:Ticket}.Entity",
+			">(\"${3:SellTicket}\")(",
+			"\t({ applyFact }) => (",
+			"\t\tparams: {",
+			"\t\t\tentity: ${1:Ticket}.Entity & ${1:Ticket}.${5:AvailableFlag};",
+			"\t\t\t$6",
+			"\t\t},",
+			"\t) => {",
+			"\t\tconst payload = ${7:SoldState.new({})};",
+			"\t\treturn DCommon.pipe(",
+			"\t\t\tparams.entity,",
+			"\t\t\t${1:Ticket}.Entity.update({ state: payload }),",
+			"\t\t\t${1:Ticket}.${8:SoldFlag}.append(payload),",
+			"\t\t\tapplyFact(payload),",
+			"\t\t);",
+			"\t},",
+			");",
+			"export type ${2:SellTicketFact} = DModeling.GetFact<typeof ${2:SellTicketFact}>;",
+			"$0"
+		]
+	},
+	"DuploJS: Domain repository": {
+		"prefix": "idr",
+		"scope": "typescript",
+		"description": "Contrat de repository exprimant les capacités extérieures du domaine",
+		"body": [
+			"import type * as DEither from \"@duplojs/lang/either\";",
+			"import { type ${1:Ticket} } from \"../entities\";",
+			"",
+			"export interface ${1:Ticket}Repository {",
+			"\tfindById(id: ${1:Ticket}.Id): Promise<DEither.Maybe<${1:Ticket}.Entity>>;",
+			"\t$0",
+			"}"
+		]
+	},
+	"DuploJS: Aggregate workflow": {
+		"prefix": "iaf",
+		"scope": "typescript",
+		"description": "Agrégat pur avec createWorkflow; demandes de commit déclaratives",
+		"body": [
+			"import * as DInvocation from \"@duplojs/lang/invocation\";",
+			"import * as DCommon from \"@duplojs/lang/common\";",
+			"import * as DEither from \"@duplojs/lang/either\";",
+			"import { ${2:SellTicketFact}, type ${3:Ticket} } from \"../entities\";",
+			"",
+			"export const ${1:sellTicket} = DInvocation.createWorkflow(",
+			"\t({ commit }) => function *(",
+			"\t\tparams: {",
+			"\t\t\tentity: ${3:Ticket}.Entity & ${3:Ticket}.${4:AvailableFlag};",
+			"\t\t\t$5",
+			"\t\t},",
+			"\t) {",
+			"\t\tconst updatedEntity = DCommon.pipe(",
+			"\t\t\t${2:SellTicketFact}.run(params),",
+			"\t\t\tDEither.unwrapRight,",
+			"\t\t);",
+			"",
+			"\t\tyield *commit(\"${6:ticket}\", updatedEntity);",
+			"\t\treturn updatedEntity;",
+			"\t},",
+			");",
+			"$0"
+		]
+	},
+	"DuploJS: Application port": {
+		"prefix": "ipf",
+		"scope": "typescript",
+		"description": "Interface Port injectée au Reader",
+		"body": [
+			"import * as DInvocation from \"@duplojs/lang/invocation\";",
+			"",
+			"export interface ${1:TicketRepository}Port {",
+			"\t$2",
+			"}",
+			"",
+			"export const ${1:TicketRepository}Port = DInvocation.createPort<${1:TicketRepository}Port>();",
+			"$0"
+		]
+	},
+	"DuploJS: Repository port": {
+		"prefix": "irpf",
+		"scope": "typescript",
+		"description": "Port applicatif prolongeant le contrat de repository du domaine",
+		"body": [
+			"import * as DInvocation from \"@duplojs/lang/invocation\";",
+			"import { type ${1:Ticket}, type ${1:Ticket}Repository } from \"../../domains\";",
+			"",
+			"export interface ${1:Ticket}RepositoryPort extends ${1:Ticket}Repository {",
+			"\tsave<GenericEntity extends ${1:Ticket}.Entity & ${1:Ticket}.Facts>(entity: GenericEntity): Promise<GenericEntity>;",
+			"}",
+			"",
+			"export const ${1:Ticket}RepositoryPort = DInvocation.createPort<${1:Ticket}RepositoryPort>();",
+			"$0"
+		]
+	},
+	"DuploJS: Use case reader": {
+		"prefix": "iucf",
+		"scope": "typescript",
+		"description": "Use case construit avec createReader et consumeWorkflow",
+		"body": [
+			"import * as DInvocation from \"@duplojs/lang/invocation\";",
+			"import { ${1:sellTicket}, type ${2:Ticket} } from \"../../domains\";",
+			"import { ${2:Ticket}RepositoryPort } from \"../ports\";",
+			"",
+			"export const ${3:SellTicketUseCase} = DInvocation.createReader(",
+			"\t{ ${2:Ticket}RepositoryPort },",
+			"\t({ ticketRepository }) => (",
+			"\t\tparams: {",
+			"\t\t\tentity: ${2:Ticket}.Entity & ${2:Ticket}.${4:AvailableFlag};",
+			"\t\t\t$5",
+			"\t\t},",
+			"\t) => DInvocation.consumeWorkflow(",
+			"\t\t${1:sellTicket}(params),",
+			"\t\t{ \"commit/${6:ticket}\": ticketRepository.save },",
+			"\t),",
+			");",
+			"$0"
+		]
+	},
+	"DuploJS: Evidence result": {
+		"prefix": "ier",
+		"scope": "typescript",
+		"description": "Résultat métier transportant une preuve de provenance",
+		"body": [
+			"DInvocation.EvidenceResult<\"${1:available}\", ${2:Ticket.Id}>$0"
+		]
+	},
+	"DuploJS: Get evidence result": {
+		"prefix": "iger",
+		"scope": "typescript",
+		"description": "Extraction typée d’une Evidence produite par un repository",
+		"body": [
+			"DInvocation.GetEvidenceResult<${1:TicketRepository}[\"${2:findAvailable}\"], \"${3:available}\">$0"
+		]
+	},
+	"DuploJS: Use case reader generic": {
+		"prefix": "iucgf",
+		"scope": "typescript",
+		"description": "Reader générique avec les ports applicatifs",
+		"body": [
+			"import * as DInvocation from \"@duplojs/lang/invocation\";",
+			"import { ${1:TicketRepositoryPort} } from \"../ports\";",
+			"",
+			"export const ${2:GenericUseCase} = DInvocation.createReader(",
+			"\t{ ${1:TicketRepositoryPort} },",
+			"\t({ ${3:ticketRepository} }) => <Generic extends ${4:unknown}>(",
+			"\t\tparams: { value: Generic },",
+			"\t) => {",
+			"\t\t$0",
+			"\t},",
+			");"
+		]
+	}
+}

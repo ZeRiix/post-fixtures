@@ -1,3 +1,4 @@
+import * as DCommon from "@duplojs/lang/common";
 import { createHub, routeStore } from "@duplojs/http";
 import { createHttpServer } from "@duplojs/http/node";
 
@@ -16,5 +17,5 @@ await createHttpServer(
 	},
 )
 	.then(
-		() => void console.log("app is running !"),
+		() => void DCommon.print("app is running !"),
 	);
